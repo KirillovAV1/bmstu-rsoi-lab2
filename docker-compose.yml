@@ -12,7 +12,7 @@ services:
       - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
-      - "5433:5433"
+      - "5433:5432"
 
   reservation:
     build:
@@ -21,7 +21,7 @@ services:
     container_name: reservation_service
     restart: on-failure
     environment:
-      DB_DSN: postgresql://program:postgres@postgres:5432/reservations
+      DB_DSN: postgresql://program:test@postgres:5432/reservations
     depends_on:
       - postgres
     ports:
@@ -34,7 +34,7 @@ services:
     container_name: payment_service
     restart: on-failure
     environment:
-      DB_DSN: postgresql://program:postgres@postgres:5432/payments
+      DB_DSN: postgresql://program:test@postgres:5432/payments
     depends_on:
       - postgres
     ports:
@@ -47,7 +47,7 @@ services:
     container_name: loyalty_service
     restart: on-failure
     environment:
-      DB_DSN: postgresql://program:postgres@postgres:5432/loyalties
+      DB_DSN: postgresql://program:test@postgres:5432/loyalties
     depends_on:
       - postgres
     ports:
