@@ -1,20 +1,74 @@
 version: "3"
 services:
   postgres:
-    image: library/postgres:13
-    container_name: postgres
+    image: postgres:13
+    container_name: postgres_lab2
     restart: on-failure
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     volumes:
       - db-data:/var/lib/postgresql/data
       - ./postgres/:/docker-entrypoint-initdb.d/
     ports:
-      - "5432:5432"
+      - "5433:5433"
 
-# TODO добавить сервисы
+  reservation:
+    build:
+      context: ./reservation
+      dockerfile: Dockerfile
+    container_name: reservation_service
+    restart: on-failure
+    environment:
+      DB_DSN: postgresql://program:postgres@postgres:5432/reservations
+    depends_on:
+      - postgres
+    ports:
+      - "8070:8070"
+
+  payment:
+    build:
+      context: ./payment
+      dockerfile: Dockerfile
+    container_name: payment_service
+    restart: on-failure
+    environment:
+      DB_DSN: postgresql://program:postgres@postgres:5432/payments
+    depends_on:
+      - postgres
+    ports:
+      - "8060:8060"
+
+  loyalty:
+    build:
+      context: ./loyalty
+      dockerfile: Dockerfile
+    container_name: loyalty_service
+    restart: on-failure
+    environment:
+      DB_DSN: postgresql://program:postgres@postgres:5432/loyalties
+    depends_on:
+      - postgres
+    ports:
+      - "8050:8050"
+
+  gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: gateway_service
+    restart: on-failure
+    environment:
+      LOYALTY_URL: http://loyalty:8050
+      PAYMENT_URL: http://payment:8060
+      RESERVATION_URL:  http://reservation:8070
+    depends_on:
+      - loyalty
+      - payment
+      - reservation
+    ports:
+      - "8080:8080"
 
 volumes:
   db-data:
