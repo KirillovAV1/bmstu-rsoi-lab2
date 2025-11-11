@@ -22,13 +22,6 @@ class LoyaltyLevel(str, Enum):
     GOLD = "GOLD"
 
 
-class PaginationResponse(BaseModel):
-    page: int
-    pageSize: int
-    totalElements: int
-    items: List[HotelResponse]
-
-
 class HotelResponse(BaseModel):
     hotelUid: UUID
     name: str
@@ -39,6 +32,13 @@ class HotelResponse(BaseModel):
     price: int
 
 
+class PaginationResponse(BaseModel):
+    page: int
+    pageSize: int
+    totalElements: int
+    items: List[HotelResponse]
+
+
 class HotelInfo(BaseModel):
     hotelUid: UUID
     name: str
@@ -46,9 +46,9 @@ class HotelInfo(BaseModel):
     stars: int
 
 
-class UserInfoResponse(BaseModel):
-    reservations: List[ReservationResponse]
-    loyalty: LoyaltyInfoResponse
+class PaymentInfo(BaseModel):
+    status: PaymentStatus
+    price: int
 
 
 class ReservationResponse(BaseModel):
@@ -58,6 +58,17 @@ class ReservationResponse(BaseModel):
     endDate: str
     status: ReservationStatus
     payment: PaymentInfo
+
+
+class LoyaltyInfoResponse(BaseModel):
+    status: LoyaltyLevel
+    discount: int
+    reservationCount: int | None = None
+
+
+class UserInfoResponse(BaseModel):
+    reservations: List[ReservationResponse]
+    loyalty: LoyaltyInfoResponse
 
 
 class CreateReservationRequest(BaseModel):
@@ -74,17 +85,6 @@ class CreateReservationResponse(BaseModel):
     discount: int
     status: ReservationStatus
     payment: PaymentInfo
-
-
-class PaymentInfo(BaseModel):
-    status: PaymentStatus
-    price: int
-
-
-class LoyaltyInfoResponse(BaseModel):
-    status: LoyaltyLevel
-    discount: int
-    reservationCount: int | None = None
 
 
 class ErrorDescription(BaseModel):
