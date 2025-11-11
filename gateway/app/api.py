@@ -19,7 +19,7 @@ router = APIRouter()
 
 @router.get("/manage/health")
 def health():
-    return {"gateway": "ok", "services": clients.check_health()}
+    return {"gateway": "ok"}
 
 
 @router.get("/api/v1/hotels", response_model=PaginationResponse)

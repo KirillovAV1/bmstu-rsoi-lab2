@@ -10,18 +10,6 @@ services = {
 client = httpx.Client(timeout=5.0)
 
 
-# HealthCheck
-def check_health():
-    results = {}
-    for name, base_url in services.items():
-        try:
-            r = client.get(f"{base_url}/manage/health")
-            results[name] = {"status_code": r.status_code, "body": r.json()}
-        except Exception as e:
-            results[name] = {"error": str(e)}
-    return results
-
-
 # Hotels
 def get_hotels(page: int, size: int) -> dict:
     r = client.get(f"{services["RESERVATION_URL"]}/api/v1/hotels", params={"page": page, "size": size})

@@ -38,7 +38,6 @@ def list_hotels(page: int = Query(0, ge=0), size: int = Query(10, ge=1, le=100))
     return {"page": page, "pageSize": size, "totalElements": total, "items": items}
 
 
-# ---------- RESERVATIONS (внутренние ручки)
 
 @router.get("/api/v1/reservations")
 def list_reservations(x_user_name: str = Header(..., alias="X-User-Name")):
