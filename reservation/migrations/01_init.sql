@@ -20,7 +20,7 @@ CREATE TABLE reservation
     status          VARCHAR(20) NOT NULL
         CHECK (status IN ('PAID', 'CANCELED')),
     start_date      TIMESTAMP WITH TIME ZONE,
-    end_data        TIMESTAMP WITH TIME ZONE
+    end_date        TIMESTAMP WITH TIME ZONE
 );
 
 INSERT INTO hotels (id, hotel_uid, name, country, city, address, stars, price) VALUES
