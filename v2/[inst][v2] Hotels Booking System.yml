@@ -415,7 +415,7 @@ components:
           description: Дата начала брони
           format: ISO 8601
         discount:
-          type: string
+          type: int
           description: Скидка за участие в бонусной программе
         status:
           type: string
