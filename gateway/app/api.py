@@ -45,7 +45,7 @@ def get_user_info(x_user_name: str = Header(..., alias="X-User-Name")):
 
 @router.get(
     "/api/v1/reservations",
-    response_model=List(ReservationResponse),
+    response_model=List[ReservationResponse],
     summary="Информация по всем бронированиям пользователя",
 )
 def get_user_reservations(x_user_name: str = Header(..., alias="X-User-Name")):
