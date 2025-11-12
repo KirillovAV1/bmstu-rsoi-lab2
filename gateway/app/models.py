@@ -1,7 +1,7 @@
 from typing import List
 from uuid import UUID
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ReservationStatus(str, Enum):
@@ -9,10 +9,9 @@ class ReservationStatus(str, Enum):
     RESERVED = "RESERVED"
     CANCELED = "CANCELED"
 
-
 class PaymentStatus(str, Enum):
     PAID = "PAID"
-    REVERSED = "REVERSED"
+    RESERVED = "RESERVED"
     CANCELED = "CANCELED"
 
 
@@ -88,7 +87,7 @@ class CreateReservationResponse(BaseModel):
 
 
 class ErrorDescription(BaseModel):
-    field: str
+    field: str | None = None
     error: str
 
 
@@ -99,3 +98,8 @@ class ErrorResponse(BaseModel):
 class ValidationErrorResponse(BaseModel):
     message: str
     errors: List[ErrorDescription]
+
+
+class GetHotelsQuery(BaseModel):
+    page: int = Field(0, ge=0)
+    size: int = Field(1, ge=1, le=100)
