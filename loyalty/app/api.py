@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header
+from fastapi import APIRouter, Header, Body
 from .db import get_conn
 import psycopg2.extras
 
@@ -32,20 +32,30 @@ def user_loyalty(x_user_name: str = Header(..., alias="X-User-Name")):
     return loyalty
 
 
-@router.patch("/api/v1/increase")
-def increase_loyalty(x_user_name: str = Header(..., alias="X-User-Name")):
+@router.patch("/api/v1/loyalty")
+def update_loyalty(
+    x_user_name: str = Header(..., alias="X-User-Name"),
+    delta: int = Body(..., embed=True),
+):
+
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             UPDATE loyalty
             SET 
-                reservation_count = reservation_count + 1,
+                reservation_count = reservation_count + %s,
                 status = CASE
-                    WHEN reservation_count + 1 < 10 THEN 'BRONZE'
-                    WHEN reservation_count + 1 < 20 THEN 'SILVER'
+                    WHEN reservation_count + %s < 10 THEN 'BRONZE'
+                    WHEN reservation_count + %s < 20 THEN 'SILVER'
                     ELSE 'GOLD'
                 END
-            WHERE username = %s;
-        """, (x_user_name,))
+            WHERE username = %s
+            RETURNING reservation_count, status;
+        """, (delta, delta, delta, x_user_name))
+
+        row = cur.fetchone()
         conn.commit()
 
-    return {"message": "Таблица Loyalty обновлена"}
+    return {
+        "message": "Loyalty обновлена"
+    }
+

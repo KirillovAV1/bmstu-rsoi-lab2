@@ -10,71 +10,83 @@ services = {
 client = httpx.Client(timeout=5.0)
 
 
-def fetch_hotels(page: int, size: int):
+def fetch_hotels(page: int, size: int) -> dict:
     r = client.get(
-        f"{services["RESERVATION_URL"]}/api/v1/hotels",
-        params={"page": page, "size": size})
+        f"{services['RESERVATION_URL']}/api/v1/hotels",
+        params={"page": page, "size": size},
+    )
     r.raise_for_status()
     return r.json()
 
 
-def fetch_user_reservations(username: str):
+def fetch_user_reservations(username: str) -> dict:
     r = client.get(
-        f"{services["RESERVATION_URL"]}/api/v1/me",
+        f"{services['RESERVATION_URL']}/api/v1/me",
         headers={"X-User-Name": username},
     )
     r.raise_for_status()
     return r.json()
 
 
-def fetch_user_loyalty(username: str):
-    r = client.get(
-        f"{services["LOYALTY_URL"]}/api/v1/me",
-        headers={"X-User-Name": username})
-    r.raise_for_status()
-    return r.json()
-
-
-def fetch_payment(payment_uid: UUID):
-    r = client.get(f"{services["PAYMENT_URL"]}/api/v1/payments/{payment_uid}")
-    r.raise_for_status()
-    return r.json()
-
-
-def fetch_hotel(hotel_uid: UUID):
-    r = client.get(f"{services["RESERVATION_URL"]}/api/v1/hotel/{hotel_uid}")
-    r.raise_for_status()
-    return r.json()
-
-
-def create_payment(price: int):
-    r = client.post(
-        f"{services['PAYMENT_URL']}/api/v1/payments",
-        json={"price": price})
-    r.raise_for_status()
-    return r.json()
-
-
-def increase_loyalty(username: str):
-    r = client.patch(
-        f"{services["LOYALTY_URL"]}/api/v1/increase",
-        headers={"X-User-Name": username})
-    r.raise_for_status()
-    return r.json()
-
-
-def new_reservation(reservation_data: dict, x_user_name: str):
-    r = client.post(
-        f"{services['RESERVATION_URL']}/api/v1/reservations",
-        headers={"X-User-Name": x_user_name},
-        json=reservation_data)
-    r.raise_for_status()
-    return r.json()
-
-
-def fetch_reservation_by_uid(reservation_uid: UUID, x_user_name: str):
+def fetch_reservation_by_uid(reservation_uid: UUID, username: str) -> dict:
     r = client.get(
         f"{services['RESERVATION_URL']}/api/v1/reservations/{reservation_uid}",
-        headers={"X-User-Name": x_user_name})
+        headers={"X-User-Name": username},
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def fetch_hotel(hotel_uid: UUID) -> dict:
+    r = client.get(
+        f"{services['RESERVATION_URL']}/api/v1/hotel/{hotel_uid}"
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def create_reservation_in_service(res_data: dict, username: str) -> dict:
+    r = client.post(
+        f"{services['RESERVATION_URL']}/api/v1/reservations",
+        headers={"X-User-Name": username},
+        json=res_data,
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def create_payment(price: int) -> dict:
+    r = client.post(
+        f"{services['PAYMENT_URL']}/api/v1/payments",
+        json={"price": price},
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def fetch_payment(payment_uid: UUID) -> dict:
+    r = client.get(
+        f"{services['PAYMENT_URL']}/api/v1/payments/{payment_uid}"
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def fetch_user_loyalty(username: str) -> dict:
+    """Получить статус лояльности пользователя."""
+    r = client.get(
+        f"{services['LOYALTY_URL']}/api/v1/me",
+        headers={"X-User-Name": username},
+    )
+    r.raise_for_status()
+    return r.json()
+
+
+def update_loyalty(username: str, delta: int) -> dict:
+    r = client.patch(
+        f"{services['LOYALTY_URL']}/api/v1/loyalty",
+        headers={"X-User-Name": username},
+        json={"delta": delta},
+    )
     r.raise_for_status()
     return r.json()

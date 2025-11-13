@@ -83,9 +83,9 @@ def create_reservation(x_user_name: str = Header(..., alias="X-User-Name"),
     loyalty_data = LoyaltyInfoResponse(**fetch_user_loyalty(x_user_name))
     payment_data = create_payment(
         calculate_price(body.startDate, body.endDate, hotel_data.price, loyalty_data.discount))
-    update_loyalty(x_user_name)
+    update_loyalty(x_user_name, delta=1)
 
-    reservation_data = new_reservation({
+    reservation_data = create_reservation_in_service({
         "hotelUid": str(body.hotelUid),
         "paymentUid": str(payment_data["paymentUid"]),
         "startDate": body.startDate.isoformat(),
@@ -111,18 +111,15 @@ def create_reservation(x_user_name: str = Header(..., alias="X-User-Name"),
             response_model=ReservationResponse,
             summary="Информация по конкретному бронированию")
 def get_reservation(
-    reservationUid: UUID,
-    x_user_name: str = Header(..., alias="X-User-Name")
+        reservationUid: UUID,
+        x_user_name: str = Header(..., alias="X-User-Name")
 ):
-
     reservation = fetch_reservation_by_uid(reservationUid, x_user_name)
     if reservation is None:
         raise HTTPException(status_code=404, detail="Билет не найден")
 
-    # 2. Получаем payment
     payment_data = fetch_payment(reservation["paymentUid"])
 
-    # 3. Формируем ответ согласно модели ReservationResponse
     return ReservationResponse(
         reservationUid=reservation["reservationUid"],
         hotel=HotelInfo(**reservation["hotel"]),
@@ -135,36 +132,44 @@ def get_reservation(
         )
     )
 
-# /api/v1/reservations/{reservationUid}:
-#     get:
-#       summary: Информация по конкретному бронированию
-#       tags:
-#         - Gateway API
-#       parameters:
-#         - name: reservationUid
-#           in: path
-#           description: UUID бронирования
-#           required: true
-#           schema:
-#             type: string
-#             format: uuid
-#         - name: X-User-Name
-#           in: header
-#           description: Имя пользователя
-#           required: true
-#           schema:
-#             type: string
-#       responses:
-#         "200":
-#           description: Информация по конкретному бронированию
-#           content:
-#             application/json:
-#               schema:
-#                 $ref: "#/components/schemas/ReservationResponse"
-#         "404":
-#           description: Билет не найден
-#           content:
-#             application/json:
-#               schema:
-#                 $ref: "#/components/schemas/ErrorResponse"
+@router.delete("/api/v1/reservations/{reservationUid}")
+def delete_reservation(
+        reservationUid: UUID,
+        x_user_name: str = Header(..., alias="X-User-Name")
+):
+    update_loyalty(x_user_name, delta=-1)
 
+
+    # * Статус бронирования помечается как `CANCELED`.
+# * В Payment Service запись об оплате помечается отмененной (статус `CANCELED`).
+# * Loyalty Service уменьшается счетчик бронирований. Так же возможно понижение статуса лояльности, если счетчик стал ниже
+#   границы уровня.
+
+
+    # delete:
+    #   summary: Отменить бронирование
+    #   tags:
+    #     - Gateway API
+    #   parameters:
+    #     - name: reservationUid
+    #       in: path
+    #       description: UUID бронирования
+    #       required: true
+    #       schema:
+    #         type: string
+    #         format: uuid
+    #     - name: X-User-Name
+    #       in: header
+    #       description: Имя пользователя
+    #       required: true
+    #       schema:
+    #         type: string
+    #   responses:
+    #     "204":
+    #       description: Бронь успешно отменена
+    #     "404":
+    #       description: Бронь не найдена
+    #       content:
+    #         application/json:
+    #           schema:
+    #             $ref: "#/components/schemas/ErrorResponse"

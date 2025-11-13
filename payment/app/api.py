@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 router = APIRouter()
 psycopg2.extras.register_uuid()
 
+
 @router.get("/manage/health")
 def health():
     return {"status": "ok"}
