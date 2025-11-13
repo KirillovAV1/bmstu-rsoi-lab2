@@ -32,4 +32,20 @@ def user_loyalty(x_user_name: str = Header(..., alias="X-User-Name")):
     return loyalty
 
 
+@router.patch("/api/v1/increase")
+def increase_loyalty(x_user_name: str = Header(..., alias="X-User-Name")):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("""
+            UPDATE loyalty
+            SET 
+                reservation_count = reservation_count + 1,
+                status = CASE
+                    WHEN reservation_count + 1 < 10 THEN 'BRONZE'
+                    WHEN reservation_count + 1 < 20 THEN 'SILVER'
+                    ELSE 'GOLD'
+                END
+            WHERE username = %s;
+        """, (x_user_name,))
+        conn.commit()
 
+    return {"message": "Таблица Loyalty обновлена"}

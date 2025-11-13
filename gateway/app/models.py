@@ -1,6 +1,7 @@
 from typing import List
 from uuid import UUID
 from enum import Enum
+from datetime import date
 from pydantic import BaseModel, Field
 
 
@@ -53,8 +54,8 @@ class PaymentInfo(BaseModel):
 class ReservationResponse(BaseModel):
     reservationUid: UUID
     hotel: HotelInfo
-    startDate: str
-    endDate: str
+    startDate: date
+    endDate: date
     status: ReservationStatus
     payment: PaymentInfo
 
@@ -72,15 +73,15 @@ class UserInfoResponse(BaseModel):
 
 class CreateReservationRequest(BaseModel):
     hotelUid: UUID
-    startDate: str
-    endDate: str
+    startDate: date
+    endDate: date
 
 
 class CreateReservationResponse(BaseModel):
     reservationUid: UUID
     hotelUid: UUID
-    startDate: str
-    endDate: str
+    startDate: date
+    endDate: date
     discount: int
     status: ReservationStatus
     payment: PaymentInfo

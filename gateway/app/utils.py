@@ -1,6 +1,7 @@
 from .clients import *
 from .models import *
 
+
 def concat_reservation_payments(reservations: list[dict]) -> list[ReservationResponse]:
     result = []
     for r in reservations:
@@ -19,3 +20,8 @@ def concat_reservation_payments(reservations: list[dict]) -> list[ReservationRes
             )
         )
     return result
+
+
+def calculate_price(start_date: date, end_date: date, price_per_night: int, discount_percent: int) -> int:
+    nights: int = (end_date - start_date).days
+    return price_per_night * nights * (100 - discount_percent) // 100
