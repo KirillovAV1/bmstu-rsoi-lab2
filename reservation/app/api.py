@@ -18,7 +18,7 @@ def health():
 def list_hotels(params: GetHotelsQuery = Depends()):
     if not params.page:
         params.page = 1
-    offset = params.page * params.size
+    offset = (params.page - 1) * params.size
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute("SELECT COUNT(*) AS total FROM hotels;")
         total = cur.fetchone()["total"]
