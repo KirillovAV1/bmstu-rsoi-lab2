@@ -32,9 +32,9 @@ def build_reservation_from_row(row: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def build_created_reservation_response(
-    row: Dict[str, Any],
-    hotel_uid: UUID,
-    payment_uid: UUID,
+        row: Dict[str, Any],
+        hotel_uid: UUID,
+        payment_uid: UUID,
 ) -> Dict[str, Any]:
     return {
         "reservationUid": str(row["reservation_uid"]),

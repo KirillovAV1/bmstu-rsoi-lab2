@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, HTTPException, Response
 from .db import get_conn
 import psycopg2.extras
 from uuid import UUID, uuid4
@@ -54,3 +54,21 @@ def create_payment(price: int = Body(..., embed=True)):
     }
 
     return payment
+
+
+@router.patch("/api/v1/payments/{paymentUid}/cancel")
+def cancel_payment(paymentUid: UUID):
+    with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+        cur.execute(
+            """
+            UPDATE payment 
+            SET status = 'CANCELED'
+            WHERE payment_uid = %s
+            """, (paymentUid,)
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Запись не найдена")
+
+        conn.commit()
+
+    return Response(status_code=204)

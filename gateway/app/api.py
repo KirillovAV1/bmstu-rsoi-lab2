@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Header, Body, HTTPException
+from fastapi import APIRouter, Depends, Header, Body, HTTPException, Response, status
 from .utils import *
 
 router = APIRouter()
@@ -54,18 +54,6 @@ def get_user_reservations(x_user_name: str = Header(..., alias="X-User-Name")):
     return reservations
 
 
-@router.get("/api/v1/loyalty",
-            response_model=LoyaltyInfoResponse,
-            summary="Получить информацию о статусе в программе лояльности")
-def get_loyalty_status(x_user_name: str = Header(..., alias="X-User-Name")):
-    loyalty_data = fetch_user_loyalty(x_user_name)
-    return LoyaltyInfoResponse(
-        status=loyalty_data.get("status"),
-        discount=loyalty_data.get("discount"),
-        reservationCount=loyalty_data.get("reservationCount")
-    )
-
-
 @router.post("/api/v1/reservations",
              response_model=CreateReservationResponse,
              summary="Забронировать отель")
@@ -112,8 +100,7 @@ def create_reservation(x_user_name: str = Header(..., alias="X-User-Name"),
             summary="Информация по конкретному бронированию")
 def get_reservation(
         reservationUid: UUID,
-        x_user_name: str = Header(..., alias="X-User-Name")
-):
+        x_user_name: str = Header(..., alias="X-User-Name")):
     reservation = fetch_reservation_by_uid(reservationUid, x_user_name)
     if reservation is None:
         raise HTTPException(status_code=404, detail="Билет не найден")
@@ -132,44 +119,32 @@ def get_reservation(
         )
     )
 
-@router.delete("/api/v1/reservations/{reservationUid}")
+
+@router.delete(
+    "/api/v1/reservations/{reservationUid}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Отменить бронирование",
+)
 def delete_reservation(
         reservationUid: UUID,
-        x_user_name: str = Header(..., alias="X-User-Name")
-):
+        x_user_name: str = Header(..., alias="X-User-Name")):
+    reservation = fetch_reservation_by_uid(reservationUid, x_user_name)
+    if reservation is None:
+        raise HTTPException(status_code=404, detail="Билет не найден")
+
+    cancel_reservation(reservationUid, x_user_name)
+    cancel_payment(reservation["paymentUid"])
     update_loyalty(x_user_name, delta=-1)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-    # * Статус бронирования помечается как `CANCELED`.
-# * В Payment Service запись об оплате помечается отмененной (статус `CANCELED`).
-# * Loyalty Service уменьшается счетчик бронирований. Так же возможно понижение статуса лояльности, если счетчик стал ниже
-#   границы уровня.
-
-
-    # delete:
-    #   summary: Отменить бронирование
-    #   tags:
-    #     - Gateway API
-    #   parameters:
-    #     - name: reservationUid
-    #       in: path
-    #       description: UUID бронирования
-    #       required: true
-    #       schema:
-    #         type: string
-    #         format: uuid
-    #     - name: X-User-Name
-    #       in: header
-    #       description: Имя пользователя
-    #       required: true
-    #       schema:
-    #         type: string
-    #   responses:
-    #     "204":
-    #       description: Бронь успешно отменена
-    #     "404":
-    #       description: Бронь не найдена
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: "#/components/schemas/ErrorResponse"
+@router.get("/api/v1/loyalty",
+            response_model=LoyaltyInfoResponse,
+            summary="Получить информацию о статусе в программе лояльности")
+def get_loyalty_status(x_user_name: str = Header(..., alias="X-User-Name")):
+    loyalty_data = fetch_user_loyalty(x_user_name)
+    return LoyaltyInfoResponse(
+        status=loyalty_data.get("status"),
+        discount=loyalty_data.get("discount"),
+        reservationCount=loyalty_data.get("reservationCount")
+    )

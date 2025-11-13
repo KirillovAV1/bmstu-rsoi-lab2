@@ -73,7 +73,6 @@ def fetch_payment(payment_uid: UUID) -> dict:
 
 
 def fetch_user_loyalty(username: str) -> dict:
-    """Получить статус лояльности пользователя."""
     r = client.get(
         f"{services['LOYALTY_URL']}/api/v1/me",
         headers={"X-User-Name": username},
@@ -90,3 +89,18 @@ def update_loyalty(username: str, delta: int) -> dict:
     )
     r.raise_for_status()
     return r.json()
+
+
+def cancel_payment(payment_uid: UUID) -> None:
+    r = client.patch(
+        f"{services['PAYMENT_URL']}/api/v1/payments/{payment_uid}/cancel",
+    )
+    r.raise_for_status()
+
+
+def cancel_reservation(reservation_uid: UUID, username: str) -> None:
+    r = client.patch(
+        f"{services['RESERVATION_URL']}/api/v1/reservations/{reservation_uid}/cancel",
+        headers={"X-User-Name": username},
+    )
+    r.raise_for_status()

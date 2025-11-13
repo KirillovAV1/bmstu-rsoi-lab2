@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Header, Body, Depends, HTTPException
+from fastapi import APIRouter, Header, Body, Depends, HTTPException, Response
 from uuid import uuid4
 from .models import *
 import psycopg2.extras
@@ -78,8 +78,8 @@ def get_hotel(hotelUid: UUID):
 
 @router.post("/api/v1/reservations")
 def create_reservation(
-    x_user_name: str = Header(..., alias="X-User-Name"),
-    body: dict = Body(...),
+        x_user_name: str = Header(..., alias="X-User-Name"),
+        body: dict = Body(...),
 ):
     reservation_uid = uuid4()
 
@@ -130,8 +130,8 @@ def create_reservation(
 
 @router.get("/api/v1/reservations/{reservationUid}")
 def get_reservation(
-    reservationUid: UUID,
-    x_user_name: str = Header(..., alias="X-User-Name"),
+        reservationUid: UUID,
+        x_user_name: str = Header(..., alias="X-User-Name"),
 ):
     with get_conn() as conn, conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
         cur.execute(
@@ -150,33 +150,23 @@ def get_reservation(
 
     return build_reservation_from_row(row)
 
-@router.delete("/api/v1/reservations/{reservationUid}")
 
+@router.patch("/api/v1/reservations/{reservationUid}/cancel", status_code=204)
+def cancel_reservation(
+        reservationUid: UUID,
+        x_user_name: str = Header(..., alias="X-User-Name")
+):
+    with get_conn() as conn, conn.cursor() as cur:
+        cur.execute("""
+            UPDATE reservation
+            SET status = 'CANCELED'
+            WHERE reservation_uid = %s
+              AND username = %s;
+        """, (reservationUid, x_user_name))
 
-    # delete:
-    #   summary: Отменить бронирование
-    #   tags:
-    #     - Gateway API
-    #   parameters:
-    #     - name: reservationUid
-    #       in: path
-    #       description: UUID бронирования
-    #       required: true
-    #       schema:
-    #         type: string
-    #         format: uuid
-    #     - name: X-User-Name
-    #       in: header
-    #       description: Имя пользователя
-    #       required: true
-    #       schema:
-    #         type: string
-    #   responses:
-    #     "204":
-    #       description: Бронь успешно отменена
-    #     "404":
-    #       description: Бронь не найдена
-    #       content:
-    #         application/json:
-    #           schema:
-    #             $ref: "#/components/schemas/ErrorResponse"
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Бронь не найдена")
+
+        conn.commit()
+
+    return Response(status_code=204)

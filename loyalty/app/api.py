@@ -34,10 +34,9 @@ def user_loyalty(x_user_name: str = Header(..., alias="X-User-Name")):
 
 @router.patch("/api/v1/loyalty")
 def update_loyalty(
-    x_user_name: str = Header(..., alias="X-User-Name"),
-    delta: int = Body(..., embed=True),
+        x_user_name: str = Header(..., alias="X-User-Name"),
+        delta: int = Body(..., embed=True),
 ):
-
     with get_conn() as conn, conn.cursor() as cur:
         cur.execute("""
             UPDATE loyalty
@@ -52,10 +51,8 @@ def update_loyalty(
             RETURNING reservation_count, status;
         """, (delta, delta, delta, x_user_name))
 
-        row = cur.fetchone()
         conn.commit()
 
     return {
         "message": "Loyalty обновлена"
     }
-

@@ -10,6 +10,7 @@ class ReservationStatus(str, Enum):
     RESERVED = "RESERVED"
     CANCELED = "CANCELED"
 
+
 class PaymentStatus(str, Enum):
     PAID = "PAID"
     RESERVED = "RESERVED"
